@@ -107,7 +107,12 @@ namespace eval _ {
     #
     # @return Return value of the block.
     proc yield { level block_or_proc args } {
-        if { [llength $block_or_proc] == 1 } {
+        # Stops type shimmering of $block_or_proc when calling llength directly
+        # on it, which in turn causes the lambda expression to be recompiled
+        # on each call to _::yield
+        set block_dup [concat $block_or_proc]
+
+        if { [llength $block_dup] == 1 } {
             set command [list $block_or_proc {*}$args]
         } else {
             set command [list apply $block_or_proc {*}$args]
