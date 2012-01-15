@@ -139,22 +139,10 @@ namespace eval _ {
         set result [list]
 
         foreach item $list {
-            if { [catch { set temp [_::yield 1 $iterator $item] } value options] } {
-                if { [dict get $options -code] == 4 } {
-                    lappend result {}
-                } else {
-                    return {*}$options $value
-                }
-            } else {
-                lappend result $temp
-            }
+            lappend result [yield 1 $iterator $item]
         }
 
-        if {[llength $result] == [llength $list]} {
-            return $result
-        } else {
-            return {}
-        }
+        return $result
     }
 
     proc reduce { list iterator memo } {
