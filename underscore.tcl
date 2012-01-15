@@ -187,6 +187,16 @@ namespace eval _ {
     interp alias {} ::_::some? {} ::_::any?
     namespace export some? any?
 
+    # Returns the first n elements from the passed list.
+    proc first { list {n 1}} {
+        lrange $list 0 $n-1
+    }
+
+    # Returns all elements from the passed list excluding the last n.
+    proc initial { list {n 1}} {
+        lrange $list 0 end-$n
+    }
+
     # Returns a sorted copy of list. Sorting is based on the return
     # values of the execution of the iterator for each item.
     proc sort_by { list iterator } {

@@ -226,3 +226,43 @@ describe "_::any?" {
         }
     }
 }
+
+describe "_::first" {
+    describe "when passed no number" {
+        it "returns the first element from the passed list" {
+            expect [_::first {1 2 3 4}] to equal 1
+        }
+    }
+
+    describe "when passed a number" {
+        it "returns the first n elements from the passed list" {
+            expect [_::first {1 2 3 4} 0] to equal {}
+            expect [_::first {1 2 3 4} 3] to equal {1 2 3}
+            expect [_::first {1 2 3 4} 5] to equal {1 2 3 4}
+        }
+    }
+
+    it "can be passed to _::map" {
+        expect [_::map {{1 2 3} {1 2 3}} _::first] to equal {1 1}
+    }
+}
+
+describe "_::initial" {
+    describe "when passed no number" {
+        it "returns everything but the last element from the passed list" {
+            expect [_::initial {1 2 3 4}] to equal {1 2 3}
+        }
+    }
+
+    describe "when passed a number" {
+        it "returns everything but the last n elements from the passed list" {
+            expect [_::initial {1 2 3 4} 0] to equal {1 2 3 4}
+            expect [_::initial {1 2 3 4} 2] to equal {1 2}
+            expect [_::initial {1 2 3 4} 5] to equal {}
+        }
+    }
+
+    it "can be passed to _::map" {
+        expect [_::map {{1 2 3} {1 2 3}} _::initial] to equal {{1 2} {1 2}}
+    }
+}
