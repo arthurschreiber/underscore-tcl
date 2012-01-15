@@ -114,15 +114,7 @@ namespace eval _ {
         }
 
         if { [uplevel [expr { $level + 1 }] [list catch $command _::__return_value _::__return_options ]] } {
-            set old_code [dict get $_::__return_options -code]
-            set old_level [dict get $_::__return_options -level]
-
-            if { $old_code == 3 && $old_level == 0 } {
-                dict set _::__return_options -code return
-                dict set _::__return_options -level [expr { $old_level + $level }]
-            } elseif { $old_code == 0 && $old_level == 1 } {
-                dict set _::__return_options -level [expr { $old_level + $level + 1 }]
-            }
+            dict set _::__return_options -level [expr { [dict get $_::__return_options -level] + $level + 1 }]
             return {*}$_::__return_options $_::__return_value
         }
         return $_::__return_value

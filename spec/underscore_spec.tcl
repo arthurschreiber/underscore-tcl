@@ -93,28 +93,6 @@ describe "_::yield" {
             return "executed"
         }
 
-        describe "calling return -code break inside a passed block" {
-            it "stops the current block execution" {
-                set aborted true
-
-                accepts_block_and_returns_executed {{} {
-                    upvar aborted aborted
-                    return -code break
-                    set aborted false
-                }}
-
-                expect $aborted to equal true
-            }
-
-            it "makes the call to yield return from the calling function" {
-                set return_value [accepts_block_and_returns_executed {{} {
-                    return -code break "aborted"
-                }}]
-
-                expect $return_value to equal "aborted"
-            }
-        }
-
         describe "calling return -code return inside a block" {
             proc helper_proc {} {
                 accepts_block_and_returns_executed {{} {
@@ -179,6 +157,22 @@ describe "_::all?" {
 
             expect $yielded to equal {1 2 3 false}
         }
+    }
+}
+
+describe "_::each" {
+    proc each_with_non_local_return {} {
+        _::each { 1 2 3 } {{x} {
+            if { $x == 2 } {
+                return -code return "non-local return"
+            } else {
+                expr { $x * $x }
+            }
+        }}
+    }
+
+    it "allows non-local returns" {
+        expect [each_with_non_local_return] to equal "non-local return"
     }
 }
 
