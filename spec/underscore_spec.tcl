@@ -266,3 +266,21 @@ describe "_::initial" {
         expect [_::map {{1 2 3} {1 2 3}} _::initial] to equal {{1 2} {1 2}}
     }
 }
+
+describe "_::times" {
+    it "executes the passed block n times" {
+        set result [list]
+        _::times 0 {{n} {
+            upvar result result
+            lappend result $n
+        }}
+        expect $result to equal [list]
+
+        set result [list]
+        _::times 3 {{n} {
+            upvar result result
+            lappend result $n
+        }}
+        expect $result to equal [list 0 1 2]
+    }
+}

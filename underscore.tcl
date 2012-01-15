@@ -212,6 +212,13 @@ namespace eval _ {
         }}
     }
 
+    # Executes the passed block n times.
+    proc times { n iterator } {
+        for {set i 0} {$i < $n} {incr i} {
+            _::yield 1 $iterator $i
+        }
+    }
+
     proc take_while { list iterator } {
         set result [list]
 
