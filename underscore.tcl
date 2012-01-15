@@ -158,12 +158,11 @@ namespace eval _ {
     # When no explicit iterator is passed, all? will return true
     # if none of the list elements is a falsy value.
     proc all? { list {iterator {{x} { return $x }}} } {
-        _::each $list {{e} {
-            upvar iterator iterator
-            if { [string is false [_::yield 2 $iterator $e]] } {
-                return -code return false
+        foreach e $list {
+            if { [string is false [_::yield 1 $iterator $e]] } {
+                return false
             }
-        }}
+        }
 
         return true
     }
@@ -177,12 +176,11 @@ namespace eval _ {
     # When no explicit iterator is passed, any? will return true
     # if at least one of the list elements is not a falsy value.
     proc any? { list {iterator {{x} { return $x }}} } {
-        _::each $list {{e} {
-            upvar iterator iterator
-            if { ![string is false [_::yield 2 $iterator $e]] } {
-                return -code return true
+        foreach e $list {
+            if { [expr { ![string is false [_::yield 1 $iterator $e]] }] } {
+                return true
             }
-        }}
+        }
 
         return false
     }
