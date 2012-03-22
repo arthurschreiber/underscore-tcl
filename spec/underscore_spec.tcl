@@ -110,6 +110,37 @@ describe "_::yield" {
     }
 }
 
+describe "_::each" {
+    before each {
+        set ::count 0
+        set ::yielded [list]
+    }
+
+    after each {
+        unset ::count
+        unset ::yielded
+    }
+
+    it "executes the given block for each element in the list" {
+        _::each {1 2 3 4} {{x} {
+            incr ::count
+        }}
+
+        expect $::count to equal 4
+    }
+
+    it "passes each element of the list to the block" {
+        _::each {1 2 3 4} {{x} {
+            lappend ::yielded $x
+        }}
+
+        expect $::yielded to equal {1 2 3 4}
+    }
+}
+
+describe "_::map" {
+
+}
 
 describe "_::all?" {
     it "always returns true on an empty list" {
