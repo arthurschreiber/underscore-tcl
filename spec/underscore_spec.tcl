@@ -298,6 +298,16 @@ describe "_::initial" {
     }
 }
 
+describe "_::index_of" {
+    it "returns the index at which the given value can be found in the list" {
+        expect [_::index_of {1 2 3} 2] to equal 1
+    }
+
+    it "returns -1 if the given value can not be found in the list" {
+        expect [_::index_of {1 2 3 4} 5] to equal -1
+    }
+}
+
 describe "_::times" {
     it "executes the passed block n times" {
         set result [list]

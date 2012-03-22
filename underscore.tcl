@@ -197,6 +197,14 @@ namespace eval _ {
         lrange $list 0 end-$n
     }
 
+    proc index_of { list value {is_sorted false} } {
+        if { ![string is false $is_sorted] } {
+            lsearch -sorted -exact $list $value
+        } else {
+            lsearch -exact $list $value
+        }
+    }
+
     # Returns a sorted copy of list. Sorting is based on the return
     # values of the execution of the iterator for each item.
     proc sort_by { list iterator } {
