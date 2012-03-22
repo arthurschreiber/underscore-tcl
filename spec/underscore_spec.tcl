@@ -1,5 +1,5 @@
 lappend auto_path [file join [file dirname [info script]] ".."]
-package require spec/autorun
+
 package require underscore
 
 describe "_::yield" {
