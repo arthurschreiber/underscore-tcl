@@ -37,7 +37,7 @@ namespace eval _ {
     #   fib_up_to 50 {{n} { puts $n }} ;# prints the fibonnaci sequence up to 50
     #
     # @example Automatic resource cleanup
-    #   # Guarantess that the file descriptor is closed,
+    #   # Guarantees that the file descriptor is closed,
     #   # even in case of an error being raised while executing the block.
     #   proc file_open { path mode block } {
     #       open $fd
