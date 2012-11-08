@@ -9,9 +9,6 @@
 package provide underscore 0.1
 
 namespace eval _ {
-    variable __return_value {}
-    variable __return_options {}
-
     # Yields a block of code in a specific stack-level.
     #
     # This function yields the passed block of code in a seperate stack frame
