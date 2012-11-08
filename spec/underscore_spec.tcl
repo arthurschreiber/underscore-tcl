@@ -27,58 +27,61 @@ describe "_::yield" {
         }
 
         it "executes the passed proc" {
-            _::yield 0 helper_proc
+            apply {{} { _::yield helper_proc }}
             expect $::yielded to be true
         }
 
         it "executes the passed proc with the passed arguments" {
-            _::yield 0 helper_proc_with_args 1 2 3 4
+            apply {{} { _::yield helper_proc_with_args 1 2 3 4 }}
             expect $::yielded_args to equal {1 2 3 4}
         }
     }
 
     describe "when passed a block" {
         it "yields the passed block" {
-            _::yield 0 {{} {
-                set ::yielded true
+            apply {{} {
+                _::yield {{} {
+                    set ::yielded true
+                }}
             }}
 
             expect $::yielded to be true
         }
 
         it "yields the passed block with the passed arguments" {
-            _::yield 0 {{args} {
-                set ::yielded_args $args
-            }} 1 2 3 4
+            apply {{} {
+                _::yield {{args} {
+                    set ::yielded_args $args
+                }} 1 2 3 4
+            }}
 
             expect $::yielded_args to equal {1 2 3 4}
         }
 
         it "yields the block in a seperate stack frame at the passed stack level" {
-            _::yield 0 {{} {
-                set ::level [info level]
+            apply {{} {
+                _::yield {{} {
+                    set ::level [info level]
+                }}
             }}
 
             expect $::level to equal [expr { [info level] + 1 }]
-
-            _::yield 1 {{} {
-                set ::level [info level]
-            }}
-
-            expect $::level to equal [expr { [info level] }]
         }
 
         proc accepts_block { block } {
-            _::yield 1 $block
+            _::yield $block
         }
 
         it "allows accessing variables at the passed stack level using 'upvar'" {
             set test {1 2 3}
 
-            _::yield 0 {{} {
-                upvar test test
-                set test {}
+            apply {{} {
+                _::yield {{} {
+                    upvar test test
+                    set test {}
+                }}
             }}
+
             expect $test to equal {}
 
             accepts_block {{} {
@@ -89,22 +92,28 @@ describe "_::yield" {
         }
 
         proc accepts_block_and_returns_executed { block } {
-            _::yield 1 $block
+            puts "Yield result: [_::yield $block]"
             return "executed"
         }
 
         describe "calling return -code return inside a block" {
             proc helper_proc {} {
-                accepts_block_and_returns_executed {{} {
+                puts [accepts_block_and_returns_executed {{} {
                     return -code return "aborted"
-                }}
+                }}]
 
                 return "not aborted"
             }
 
-            it "returns from the calling stack level" {
-                set return_value [helper_proc]
-                expect $return_value to equal "aborted"
+            it "returns from the yielding proc" {
+                expect [
+                    apply {{} {
+                        _::yield {{} {
+                            return -code return "return from yield"
+                        }}
+                        return "return from apply"
+                    }}
+                ] to equal "return from yield"
             }
         }
     }

@@ -27,7 +27,7 @@ namespace eval _ {
     #       set i1 [set i2 1]
     #
     #       while { $i1 <= $max } {
-    #           _::yield 1 $block $i1
+    #           _::yield $block $i1
     #           set tmp [expr $i + $i2]
     #           set i1 $i2
     #           set i2 $tmp
@@ -43,7 +43,7 @@ namespace eval _ {
     #       open $fd
     #
     #       # Catch any exceptions that might happen
-    #       set error [catch { _::yield 1 $block $fd } value options]]
+    #       set error [catch { _::yield $block $fd } value options]]
     #
     #       catch { close $fd }
     #
@@ -88,7 +88,7 @@ namespace eval _ {
     #           # we have to increase the yield level here, as we want to
     #           # execute the block on the same stack level as reverse_each
     #           # was called on
-    #           _::yield 2 $block {*}$args
+    #           uplevel 1 [list _::yield $block {*}$args]
     #       }}
     #   }
     #
@@ -98,38 +98,35 @@ namespace eval _ {
     #       uplevel [list _::each [lreverse $list] $block]
     #   }
     #
-    # @param level Distance to move up the procedure stack before calling
-    #   ::apply with the passed block and arguments.
     # @param block_or_proc The block (anonymous function) or proc to be executed
     #   with the passed arguments. If it's a block, it can be either in the form
     #   of {args block} or {args block namespace} (see the documentation for ::apply).
     # @param args The arguments with which the passed block should be called.
     #
     # @return Return value of the block.
-    proc yield { level block_or_proc args } {
+    proc yield { block_or_proc args } {
         # Stops type shimmering of $block_or_proc when calling llength directly
         # on it, which in turn causes the lambda expression to be recompiled
         # on each call to _::yield
         set block_dup [concat $block_or_proc]
 
-        if { [llength $block_dup] == 1 } {
-            set command [list $block_or_proc {*}$args]
-        } else {
-            set command [list apply $block_or_proc {*}$args]
-        }
+        catch {
+            if { [llength $block_dup] == 1 } {
+                uplevel 2 [list $block_or_proc {*}$args]
+            } else {
+                uplevel 2 [list apply $block_or_proc {*}$args]
+            }
+        } result options
 
-        if { [uplevel [expr { $level + 1 }] [list catch $command _::__return_value _::__return_options ]] } {
-            dict set _::__return_options -level [expr { [dict get $_::__return_options -level] + $level + 1 }]
-            return {*}$_::__return_options $_::__return_value
-        }
-        return $_::__return_value
+        dict incr options -level 1
+        return -options $options $result
     }
 
     # Iterates over the passed list, yielding each element in turn to the
     # passed iterator
     proc each { list iterator } {
         foreach item $list {
-            yield 1 $iterator $item
+            yield $iterator $item
         }
 
         return $list
@@ -139,7 +136,7 @@ namespace eval _ {
         set result [list]
 
         foreach item $list {
-            lappend result [yield 1 $iterator $item]
+            lappend result [yield $iterator $item]
         }
 
         return $result
@@ -147,7 +144,7 @@ namespace eval _ {
 
     proc reduce { list iterator memo } {
         foreach item $list {
-            set memo [yield 1 $iterator $memo $item]
+            set memo [yield $iterator $memo $item]
         }
         return $memo
     }
@@ -159,7 +156,7 @@ namespace eval _ {
     # if none of the list elements is a falsy value.
     proc all? { list {iterator {{x} { return $x }}} } {
         foreach e $list {
-            if { [string is false [_::yield 1 $iterator $e]] } {
+            if { [string is false [yield $iterator $e]] } {
                 return false
             }
         }
@@ -177,7 +174,7 @@ namespace eval _ {
     # if at least one of the list elements is not a falsy value.
     proc any? { list {iterator {{x} { return $x }}} } {
         foreach e $list {
-            if { [expr { ![string is false [_::yield 1 $iterator $e]] }] } {
+            if { [expr { ![string is false [yield $iterator $e]] }] } {
                 return true
             }
         }
@@ -210,7 +207,7 @@ namespace eval _ {
     proc sort_by { list iterator } {
         set list_to_sort [_::map $list {{item} {
             upvar iterator iterator
-            list [_::yield 2 $iterator $item] $item
+            list [uplevel [list yield $iterator $item] $item
         }}]
 
         set sorted_list [lsort $list_to_sort]
@@ -223,7 +220,7 @@ namespace eval _ {
     # Executes the passed block n times.
     proc times { n iterator } {
         for {set i 0} {$i < $n} {incr i} {
-            _::yield 1 $iterator $i
+            yield $iterator $i
         }
     }
 
@@ -231,7 +228,7 @@ namespace eval _ {
         set result [list]
 
         foreach item $list {
-            if { ![yield 1 $iterator $item] } {
+            if { ![yield $iterator $item] } {
                 break
             }
 
@@ -245,7 +242,7 @@ namespace eval _ {
         set result [dict create]
 
         foreach item $list {
-            dict lappend result [yield 1 $iterator $item] $item
+            dict lappend result [yield $iterator $item] $item
         }
 
         return $result
