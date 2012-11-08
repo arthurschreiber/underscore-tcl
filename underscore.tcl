@@ -133,7 +133,22 @@ namespace eval _ {
         set result [list]
 
         foreach item $list {
-            lappend result [yield $iterator $item]
+            set status [catch { yield $iterator $item } return_value options]
+
+            switch -exact -- $status {
+                0 - 4 {
+                    # 'normal' return and errors
+                    lappend result $return_value
+                }
+                3 {
+                    # 'break' should return immediately 
+                    return $return_value
+                }
+                default {
+                    # Just pass through everything else
+                    return -options $options $return_value
+                }
+            }
         }
 
         return $result

@@ -148,7 +148,19 @@ describe "_::each" {
 }
 
 describe "_::map" {
+    it "continues iteration and uses the given value if return -code continue is called" {
+        expect [_::map {1 2 3 4 5} { x {
+            if { $x == 3 } { return -code continue -1 }
+            return $x
+        } }] to equal {1 2 -1 4 5}
+    }
 
+    it "breaks iteration and returns the given value if return -code break is called" {
+        expect [_::map {1 2 3 4 5} { x {
+            if { $x == 3 } { return -code break -1 }
+            return $x
+        } }] to equal -1
+    }
 }
 
 describe "_::all?" {
