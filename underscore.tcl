@@ -254,9 +254,52 @@ namespace eval _ {
         set result [dict create]
 
         foreach item $list {
-            dict lappend result [yield $iterator $item] $item
+            dict lappend result [_::yield $iterator $item] $item
         }
 
         return $result
+    }
+
+    # Calls the given block for each element in the list,
+    # returning a new list without the elements for which the block returned
+    # a truthy value.
+    #
+    # @example
+    #   set large [_::reject {1 2 3 4 5} {{n} {
+    #       expr { $n < 3 }
+    #   }}]
+    #   set large; # => {3 4 5}
+    #
+    # @param list [list]
+    # @param block [lambda]
+    # @return [list]
+    proc reject { list block } {
+        set result [list]
+        foreach item $list {
+            if { ![_::yield $block $item] } {
+                lappend result $item
+            }
+        }
+        return $result
+    }
+
+    # Looks through each value in the given list, returning the first one for
+    # which the block returned a truthy value.
+    #
+    # @example
+    #   set even [_::detect {1 2 3 4 5} {{n} {
+    #       expr { $n < 3 }
+    #   }}]
+    #   set even; # => 2
+    # 
+    # @param list [list]
+    # @param block [lambda]
+    # @return [list]
+    proc detect { list block } {
+        foreach item $list {
+            if { [_::yield $block $item] } {
+                return $item
+            }
+        }
     }
 }
