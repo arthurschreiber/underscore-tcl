@@ -123,17 +123,19 @@ namespace eval _ {
     # passed iterator
     proc each { list iterator } {
         foreach item $list {
-            yield $iterator $item
+            _::yield $iterator $item
         }
 
         return $list
     }
 
+    # Returns a new list of values by applying the given block to each
+    # value of the given list.
     proc map { list iterator } {
         set result [list]
 
         foreach item $list {
-            set status [catch { yield $iterator $item } return_value options]
+            set status [catch { _::yield $iterator $item } return_value options]
 
             switch -exact -- $status {
                 0 - 4 {
@@ -141,7 +143,7 @@ namespace eval _ {
                     lappend result $return_value
                 }
                 3 {
-                    # 'break' should return immediately 
+                    # 'break' should return immediately
                     return $return_value
                 }
                 default {
@@ -156,7 +158,7 @@ namespace eval _ {
 
     proc reduce { list iterator memo } {
         foreach item $list {
-            set memo [yield $iterator $memo $item]
+            set memo [_::yield $iterator $memo $item]
         }
         return $memo
     }
@@ -168,7 +170,7 @@ namespace eval _ {
     # if none of the list elements is a falsy value.
     proc all? { list {iterator {{x} { return $x }}} } {
         foreach e $list {
-            if { [string is false [yield $iterator $e]] } {
+            if { [string is false [_::yield $iterator $e]] } {
                 return false
             }
         }
@@ -186,7 +188,7 @@ namespace eval _ {
     # if at least one of the list elements is not a falsy value.
     proc any? { list {iterator {{x} { return $x }}} } {
         foreach e $list {
-            if { [expr { ![string is false [yield $iterator $e]] }] } {
+            if { [expr { ![string is false [_::yield $iterator $e]] }] } {
                 return true
             }
         }
@@ -240,7 +242,7 @@ namespace eval _ {
         set result [list]
 
         foreach item $list {
-            if { ![yield $iterator $item] } {
+            if { ![_::yield $iterator $item] } {
                 break
             }
 
