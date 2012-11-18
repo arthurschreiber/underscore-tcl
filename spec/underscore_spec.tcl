@@ -37,6 +37,14 @@ describe "_::yield" {
         }
     }
 
+    describe "when given a proc name" {
+        it "executes the proc with the passed arguments" {
+            expect [apply {{} {
+                _::yield expr { 1 + 2 }
+            }}] to equal 3
+        }
+    }
+
     describe "when passed a block" {
         it "yields the passed block" {
             apply {{} {
