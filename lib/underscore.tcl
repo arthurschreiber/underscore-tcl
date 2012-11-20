@@ -129,6 +129,34 @@ namespace eval _ {
         return $list
     }
 
+    # Iterates over the passed list, yielding each element and its index in turn
+    # to the passed iterator.
+    #
+    # @return [list] The given list.
+    proc each_with_index { list iterator } {
+        set count [llength $list]
+
+        for { set i 0 } { $i < [llength $list] } { incr i } {
+            _::yield $iterator $item $i
+        }
+
+        return $list
+    }
+
+    # Iterates over the passed list in slices of +number+ elements.
+    #
+    # @return An empty string.
+    proc each_slice { list number iterator } {
+        if { $number < 1 } {
+            return -code error "Invalid slice size"
+        }
+
+        for { set i 0 } { $i < [llength $list] } { incr i $number } {
+            _::yield $iterator [lrange $list $i [expr { $i+$number-1 }]]
+        }
+        return
+    }
+
     # Returns a new list of values by applying the given block to each
     # value of the given list.
     proc map { list iterator } {
@@ -156,11 +184,71 @@ namespace eval _ {
         return $result
     }
 
-    proc reduce { list iterator memo } {
+    proc reduce { list iterator args } {
+        if { [llength $args] > 1 } {
+            return -code error "Wrong # of args: should be _::reduce list iterator ?initial?"
+        }
+
+        if { [llength $args] == 1 } {
+            set memo [lindex $args 0]
+        } elseif { [llength $list] == 0 } {
+            return -code error "Reduce of empty list with no initial value"
+        } else {
+            set list [lassign $list memo]
+        }
+
         foreach item $list {
             set memo [_::yield $iterator $memo $item]
         }
         return $memo
+    }
+
+    proc reduce_right { list iterator args } {
+        if { [llength $args] > 1 } {
+            return -code error "Wrong # of args: should be _::reduce_right list iterator ?initial?"
+        }
+
+        if { [llength $args] == 1 } {
+            set memo [lindex $args 0]
+        } elseif { [llength $list] == 0 } {
+            return -code error "Reduce of empty list with no initial value"
+        } else {
+            set memo [lindex $list "end"]
+            set list [lreplace $list [set list "end"] "end"]
+        }
+
+        set length [llength $list]
+        while { $length > 0 } {
+            incr length -1
+            set memo [_::yield $iterator $memo [lindex $list $length]]
+        }
+
+        return $memo
+    }
+
+    proc find { list iterator } {
+        foreach value $list {
+            if { [_::yield $iterator $value] } {
+                return $value
+            }
+        }
+
+        # Return an empty string.
+        return
+    }
+
+    proc partition { list iterator } {
+        set first [set second [list]]
+
+        foreach value $list {
+            if { [_::yield $iterator $value] } {
+                lappend first $value
+            } else {
+                lappend second $value
+            }
+        }
+
+        list $first $second
     }
 
     # Executes the passed iterator with each element of the passed list.

@@ -155,6 +155,22 @@ describe "_::each" {
     }
 }
 
+describe "_::each_slice" {
+    it "yields the given list in slices of the given size" {
+        set result [list]
+        _::each_slice [list 1 2 3 4 5 6 7 8] 3 {{ slice } {
+            upvar result result
+            lappend result $slice
+        }}
+
+        expect $result to equal [list \
+            [list 1 2 3] \
+            [list 4 5 6] \
+            [list 7 8] \
+        ]
+    }
+}
+
 describe "_::map" {
     it "continues iteration and uses the given value if return -code continue is called" {
         expect [_::map {1 2 3 4 5} { x {
@@ -334,6 +350,76 @@ describe "_::index_of" {
 
     it "returns -1 if the given value can not be found in the list" {
         expect [_::index_of {1 2 3 4} 5] to equal -1
+    }
+}
+
+describe "_::reduce" {
+    it "can sum up a list of numbers" {
+        expect [_::reduce {1 2 3} {{ sum num } {
+            expr { $sum + $num }
+        }} 0] to equal 6
+    }
+
+    it "can access surrounding variables using upvar" {
+        set multiplier 3
+        expect [_::reduce {1 2 3} {{ sum num } {
+            upvar multiplier multiplier
+            expr { $sum + $num * $multiplier }
+        }} 0] to equal 18
+    }
+
+    it "has a default initial value" {
+        expect [_::reduce {1 2 3} {{ sum num } {
+            expr { $sum + $num }
+        }}] to equal 6
+    }
+
+    it "returns the initial value if given an empty list" {
+        expect [_::reduce {} {{ memo value } { }} 10] to equal 10
+    }
+
+    it "throws an error when given a list without an initial value" {
+        expect {
+            _::reduce {} {{ memo value } { }}
+        } to raise_error
+    }
+}
+
+describe "_::reduce_right" {
+    it "can perform right folds" {
+        expect [_::reduce_right {"foo" "bar" "baz"} {{ memo str } {
+            return "${memo}${str}"
+        }} ""] to equal "bazbarfoo"
+    }
+
+    it "has a default initial value" {
+        expect [_::reduce_right {"foo" "bar" "baz"} {{ memo str } {
+            return "${memo}${str}"
+        }}] to equal "bazbarfoo"
+    }
+
+    it "returns the initial value if given an empty list" {
+        expect [_::reduce {} {{ memo value } { }} "baz"] to equal "baz"
+    }
+
+    it "throws an error when given a list without an initial value" {
+        expect {
+            _::reduce {} {{ memo value } { }}
+        } to raise_error
+    }
+}
+
+describe "_::find" {
+    it "returns the first found value" {
+        expect [_::find {1 2 3 4} {{n} {
+            expr { $n > 2 }
+        }}] to equal 3
+    }
+
+    it "returns an empty string if no value was found" {
+        expect [_::find {1 2 3 4} {{n} {
+            return false
+        }}] to equal ""
     }
 }
 
