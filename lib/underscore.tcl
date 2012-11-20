@@ -177,8 +177,6 @@ namespace eval _ {
 
         return true
     }
-    interp alias {} ::_::every? {} ::_::all?
-    namespace export all? every?
 
     # Executes the passed iterator with each element of the passed list.
     # Returns true if the passed block returns at least one value that
@@ -195,8 +193,6 @@ namespace eval _ {
 
         return false
     }
-    interp alias {} ::_::some? {} ::_::any?
-    namespace export some? any?
 
     # Returns the first n elements from the passed list.
     proc first { list {n 1}} {
