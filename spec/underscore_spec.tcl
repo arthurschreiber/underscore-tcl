@@ -440,3 +440,63 @@ describe "_::times" {
         expect $result to equal [list 0 1 2]
     }
 }
+
+describe "_::max" {
+    it "can give us the largest value of a simple list" {
+        expect [_::max {1 3 2}] to equal 3
+    }
+
+    it "can give us the largest value based on an iterator" {
+        expect [_::max {"first" "second" "third"} {{ word } {
+            string length $word
+        }}] to equal "second"
+    }
+
+    it "can access surrounding variables using upvar" {
+        set bonus_match 2
+        expect [_::max {1 3 2} {{ num } {
+            upvar bonus_match bonus_match 
+            set output $num
+            if {$num == $bonus_match} {
+                set output 30
+            } 
+            return $output
+        }}] to equal 2
+    }
+
+    it "throws an error when given an empty list" {
+        expect {
+            _::max {}
+        } to raise_error
+    }
+}
+
+describe "_::min" {
+    it "can give us the smallest value of a simple list" {
+        expect [_::min {1 3 2}] to equal 1
+    }
+
+    it "can give us the smallest value based on an iterator" {
+        expect [_::min {"first" "second" "thi"} {{ word } {
+            string length $word
+        }}] to equal "thi"
+    }
+
+    it "can access surrounding variables using upvar" {
+        set bonus_match 1
+        expect [_::min {1 3 2} {{ num } {
+            upvar bonus_match bonus_match 
+            set output $num
+            if {$num == $bonus_match} {
+                set output 30
+            } 
+            return $output
+        }}] to equal 2
+    }
+
+    it "throws an error when given an empty list" {
+        expect {
+            _::min {}
+        } to raise_error
+    }
+}
