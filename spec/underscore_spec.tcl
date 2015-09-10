@@ -500,3 +500,51 @@ describe "_::min" {
         } to raise_error
     }
 }
+
+describe "_::zip" {
+
+    it "should throw an error when given no args" {
+        expect {
+            _::zip
+        } to raise_error
+    }
+
+    it "should return an empty list when provided with one" {
+        expect [
+            _::zip {}
+        ] to equal {}
+    }
+
+    it "should return lots of single item lists for a single input" {
+        expect [
+            _::zip {1 2 3}
+        ]  to equal {1 2 3}
+    }
+
+    it "should return lists paired up" {
+        expect [
+            _::zip {Llama Cat Camel} {wool fur hair} {1 2 3}
+        ] to equal {{Llama wool 1} {Cat fur 2} {Camel hair 3}}
+    }
+}
+
+describe "_::unzip" {
+
+    it "should return an empty list when provided with one" {
+        expect [
+            _::unzip {}
+        ] to equal {}
+    }
+
+    it "should translate a list" {
+        expect [
+            _::unzip {{Llama wool 1} {Cat fur 2} {Camel hair 3}}
+        ] to equal {{Llama Cat Camel} {wool fur hair} {1 2 3}}
+    }
+
+    it "should handle list length differences" {
+        expect [
+            _::unzip {{Llama wool 1} {Cat fur} {Camel hair 3}}
+        ] to equal {{Llama Cat Camel} {wool fur hair} {1 {} 3}}
+    }
+}

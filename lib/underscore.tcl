@@ -468,4 +468,50 @@ namespace eval _ {
         }
         return $result
     }
+
+    # Zip together multiple lists into a single list,
+    # with elements sharing an index joined together
+    #
+    # @example
+    #   set zipped [_::zip {Llama Cat Camel} {wool fur hair} {1 2 3}]
+    #   set zipped; # -> {{Llama wool 1} {Cat fur 2} {Camel hair 3}}
+    #
+    # @param ?args? One or more lists
+    # @return list
+    proc zip {args} {
+        if { [llength $args] == 0} {
+            return -code error "Wrong # args: should be _::zip ?args?"
+        }
+        return [_::unzip $args]
+    }
+
+    # Reverse the action of Zip, turning a list of lists into
+    # a list of lists for each index
+    #
+    # @example
+    #   set unzipped [_::unzip {{Llama wool 1} {Cat fur 2} {Camel hair 3}}]
+    #   set unzipped; # -> {{Llama Cat Camel} {wool fur hair} {1 2 3}}
+    #
+    # @param list [list]
+    # @return list
+    proc unzip {list} {
+        if {$list == {}} {
+            return {}
+        }
+
+        set length [llength [_::max $list {{ sublist } {
+            return [llength $sublist]
+        }}]]
+
+        set output [list]
+
+        for {set i 0} {$i < $length} {incr i} {
+            set mapping [_::map $list {{ sublist } {
+                upvar i i
+                return [lindex $sublist $i]
+            }}]
+            lappend output $mapping
+        }
+        return $output
+    }
 }
