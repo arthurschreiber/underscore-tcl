@@ -440,3 +440,111 @@ describe "_::times" {
         expect $result to equal [list 0 1 2]
     }
 }
+
+describe "_::max" {
+    it "can give us the largest value of a simple list" {
+        expect [_::max {1 3 2}] to equal 3
+    }
+
+    it "can give us the largest value based on an iterator" {
+        expect [_::max {"first" "second" "third"} {{ word } {
+            string length $word
+        }}] to equal "second"
+    }
+
+    it "can access surrounding variables using upvar" {
+        set bonus_match 2
+        expect [_::max {1 3 2} {{ num } {
+            upvar bonus_match bonus_match 
+            set output $num
+            if {$num == $bonus_match} {
+                set output 30
+            } 
+            return $output
+        }}] to equal 2
+    }
+
+    it "throws an error when given an empty list" {
+        expect {
+            _::max {}
+        } to raise_error
+    }
+}
+
+describe "_::min" {
+    it "can give us the smallest value of a simple list" {
+        expect [_::min {1 3 2}] to equal 1
+    }
+
+    it "can give us the smallest value based on an iterator" {
+        expect [_::min {"first" "second" "thi"} {{ word } {
+            string length $word
+        }}] to equal "thi"
+    }
+
+    it "can access surrounding variables using upvar" {
+        set bonus_match 1
+        expect [_::min {1 3 2} {{ num } {
+            upvar bonus_match bonus_match 
+            set output $num
+            if {$num == $bonus_match} {
+                set output 30
+            } 
+            return $output
+        }}] to equal 2
+    }
+
+    it "throws an error when given an empty list" {
+        expect {
+            _::min {}
+        } to raise_error
+    }
+}
+
+describe "_::zip" {
+
+    it "should throw an error when given no args" {
+        expect {
+            _::zip
+        } to raise_error
+    }
+
+    it "should return an empty list when provided with one" {
+        expect [
+            _::zip {}
+        ] to equal {}
+    }
+
+    it "should return lots of single item lists for a single input" {
+        expect [
+            _::zip {1 2 3}
+        ]  to equal {1 2 3}
+    }
+
+    it "should return lists paired up" {
+        expect [
+            _::zip {Llama Cat Camel} {wool fur hair} {1 2 3}
+        ] to equal {{Llama wool 1} {Cat fur 2} {Camel hair 3}}
+    }
+}
+
+describe "_::unzip" {
+
+    it "should return an empty list when provided with one" {
+        expect [
+            _::unzip {}
+        ] to equal {}
+    }
+
+    it "should translate a list" {
+        expect [
+            _::unzip {{Llama wool 1} {Cat fur 2} {Camel hair 3}}
+        ] to equal {{Llama Cat Camel} {wool fur hair} {1 2 3}}
+    }
+
+    it "should handle list length differences" {
+        expect [
+            _::unzip {{Llama wool 1} {Cat fur} {Camel hair 3}}
+        ] to equal {{Llama Cat Camel} {wool fur hair} {1 {} 3}}
+    }
+}

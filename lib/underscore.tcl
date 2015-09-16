@@ -388,4 +388,130 @@ namespace eval _ {
             }
         }
     }
+
+    # Returns the largest value in the given list
+    # If an iterator function is provided, the result will be used for comparisons
+    #
+    # @example
+    #   set cats [list [dict create name "Buffy" age 16] [dict create name "Jessie" age 17] [dict create name "Fluffy" age 8]]
+    #   set oldest [_::max $cats {{ cat } {
+    #       dict get $cat age
+    #   }}]
+    #   set oldest; # => name Jessie age 17
+    #
+    # @param list [list]
+    # @param ?iterator? [lambda]
+    # @return Item from list
+    proc max { list args } {
+        if { [llength $list] == 0} {
+            return -code error "Cannot get the max of an empty list"
+        }
+
+        if { [llength $args] > 1 } {
+            return -code error "Wrong # of args: should be _::max list ?iterator?"
+        }
+
+        if { [llength $args] == 1 } {
+            set iterator [lindex $args 0]
+        }  else {
+            set iterator {{ item } { return $item }}
+        }
+
+        set last_computed {}
+        set result {}
+
+        foreach item $list {
+            set computed [_::yield $iterator $item]
+            if {$last_computed == {} || $computed > $last_computed} {
+                set last_computed $computed
+                set result $item
+            }
+        }
+        return $result
+    }
+
+    # Returns the smallest value in the given list
+    # If an iterator function is provided, the result will be used for comparisons
+    #
+    # @example
+    #   set numbers {10 5 100 2 1000}
+    #   set smallest [_::min $numbers]
+    #   set smallest; # => 2
+    #
+    # @param list [list]
+    # @param ?iterator? [lambda]
+    # @return Item from list
+    proc min { list args } {
+        if { [llength $list] == 0} {
+            return -code error "Cannot get the min of an empty list"
+        }
+
+        if { [llength $args] > 1 } {
+            return -code error "Wrong # of args: should be _::min list ?iterator?"
+        }
+
+        if { [llength $args] == 1 } {
+            set iterator [lindex $args 0]
+        }  else {
+            set iterator {{ item } { return $item }}
+        }
+
+        set last_computed {}
+        set result {}
+
+        foreach item $list {
+            set computed [_::yield $iterator $item]
+            if {$last_computed == {} || $computed < $last_computed} {
+                set last_computed $computed
+                set result $item
+            }
+        }
+        return $result
+    }
+
+    # Zip together multiple lists into a single list,
+    # with elements sharing an index joined together
+    #
+    # @example
+    #   set zipped [_::zip {Llama Cat Camel} {wool fur hair} {1 2 3}]
+    #   set zipped; # -> {{Llama wool 1} {Cat fur 2} {Camel hair 3}}
+    #
+    # @param ?args? One or more lists
+    # @return list
+    proc zip {args} {
+        if { [llength $args] == 0} {
+            return -code error "Wrong # args: should be _::zip ?args?"
+        }
+        return [_::unzip $args]
+    }
+
+    # Reverse the action of Zip, turning a list of lists into
+    # a list of lists for each index
+    #
+    # @example
+    #   set unzipped [_::unzip {{Llama wool 1} {Cat fur 2} {Camel hair 3}}]
+    #   set unzipped; # -> {{Llama Cat Camel} {wool fur hair} {1 2 3}}
+    #
+    # @param list [list]
+    # @return list
+    proc unzip {list} {
+        if {$list == {}} {
+            return {}
+        }
+
+        set length [llength [_::max $list {{ sublist } {
+            return [llength $sublist]
+        }}]]
+
+        set output [list]
+
+        for {set i 0} {$i < $length} {incr i} {
+            set mapping [_::map $list {{ sublist } {
+                upvar i i
+                return [lindex $sublist $i]
+            }}]
+            lappend output $mapping
+        }
+        return $output
+    }
 }
